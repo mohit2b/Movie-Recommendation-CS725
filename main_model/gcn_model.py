@@ -11,6 +11,8 @@ import random
 cos = torch.nn.CosineSimilarity(dim=1, eps=1e-6)
 
 PATH = "path to save model"
+loss_name = "bpr"
+model_type = "GCN"
 
 seed = 42
 np.random.seed(seed)
@@ -18,8 +20,6 @@ torch.manual_seed(seed)
 torch.cuda.manual_seed(seed)
 random.seed(seed)
 
-loss_name = "bpr"
-model_type = "GCN"
 
 movie_lens = MovieLens100K('./data/movie_lens')[0]
 movie_features = movie_lens["movie"]["x"]
@@ -160,7 +160,7 @@ def negative_sample_calculation(nodes, edge_index):
 
 min_ep_loss = 1e6
 num_nodes = train_edge_index.max().item() + 1
-EPOCHS = 1
+EPOCHS = 10
 
 for i in tqdm(range(EPOCHS)):
     model.train()
@@ -179,6 +179,10 @@ for i in tqdm(range(EPOCHS)):
     loss.backward()
     optimizer.step()
 
+# use when loading the saved model and skipping training #
+model = GNN(model_type, in_channels= 32, hidden_channels=128, out_channels=64)
+optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
+model=model.to(device)
 model.load_state_dict(torch.load(PATH))
 
 model.eval()
@@ -212,29 +216,10 @@ for i in tqdm(range(len(users))):
       if node in test_edges_q_indices:
           mrr.append(1 / (rank + 1))
           break
-  # if p_10 > 0:
-  #   print("user ", curr_node)
-  #   print( top_k)
-  #   print("p10 ", p_10)
-  #   break
-
-  avg_precision = 0.0
-  num_relevant = 0
-  for rank, node in enumerate(top_k, start=1):
-      if node in test_edges_q_indices:
-          num_relevant += 1
-          avg_precision += num_relevant / rank
-  if num_relevant > 0:
-      map_scores.append(avg_precision / len(test_edges_q_indices))
-  else:
-      map_scores.append(0.0)
-
-  # NDCG Calculation
   dcg = 0.0
   for rank, node in enumerate(top_k, start=1):
       if node in test_edges_q_indices:
           dcg += 1 / np.log2(rank + 1)
-  # Compute IDCG (ideal DCG)
   ideal_relevant = min(len(test_edges_q_indices), 10)
   idcg = sum(1 / np.log2(rank + 1) for rank in range(1, ideal_relevant + 1))
   ndcg_scores.append(dcg / idcg if idcg > 0 else 0.0)
@@ -246,5 +231,4 @@ print("Precision@5:", np.mean(p5))
 print("Precision@10:", np.mean(p10))
 print("Recall@10:", np.mean(r10))
 print("MRR:", np.mean(mrr))
-print("MAP:", np.mean(map_scores))
 print("NDCG@10:", np.mean(ndcg_scores))
