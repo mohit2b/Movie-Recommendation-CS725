@@ -10,7 +10,7 @@ Under main model -
     ```
 - for gcn_model_random_lsh.py--
   - provide the following details
-  -   ```
-  PATH = "path to load the model"
-  model_type = "GCN"
+  - ```
+    PATH = "path to load the model"
+    model_type = "GCN"
     ```
