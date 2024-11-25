@@ -10,7 +10,7 @@ import numpy as np
 import random
 cos = torch.nn.CosineSimilarity(dim=1, eps=1e-6)
 
-PATH = "path to save model"
+PATH = "path to save the model"
 loss_name = "bpr"
 model_type = "GCN"
 
@@ -30,7 +30,7 @@ data_edge_index = data["edge_index"][:, mask]
 data_edge_label = data["rating"][mask]
 
 user_num_nodes = user_features.shape[0]
-train_nodes, testing_nodes = train_test_split(range(user_num_nodes), test_size=0.2, random_state=42)
+train_nodes, testing_nodes = train_test_split(range(user_num_nodes), test_size=0.2, random_state=seed)
 val_nodes, test_nodes = testing_nodes[:len(testing_nodes)//2], testing_nodes[len(testing_nodes)//2: ]
 
 Y = data_edge_index[0]
@@ -154,7 +154,6 @@ def negative_sample_calculation(nodes, edge_index):
   for i in tqdm(range(len(nodes))):
     neg_val = sample_neg_edges(nodes[i], edge_index, num_sample=1000)
     neg_sample_dict[nodes[i]] = neg_val
-
   return neg_sample_dict
 
 
@@ -173,7 +172,6 @@ for i in tqdm(range(EPOCHS)):
         loss = margin_loss(embeddings, train_edge_index, margin = 0.01)
 
     if loss < min_ep_loss:
-
         min_ep_loss = loss
         torch.save(model.state_dict(), PATH)
     loss.backward()
