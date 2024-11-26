@@ -38,8 +38,6 @@ interaction_matrix = coo_matrix(
     shape=(num_users, num_movies)
 )
 
-interaction_matrix.shape
-
 k = 16  # Number of latent factors
 interaction_matrix = interaction_matrix.astype(np.float32)
 
